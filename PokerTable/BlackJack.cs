@@ -3,22 +3,29 @@ using Il2CppTMPro;
 using MelonLoader;
 using System.Collections;
 using UnityEngine;
+using static RumbleModdingAPI.Calls.GameObjects.Gym.LOGIC.Slabbuddymenuvariant.MenuForm.Base.ControlsSlab.GameSlabCanvas.Text.GameSlabSettings.HandSettings;
 
 namespace PokerTable
 {
-
-    [RegisterTypeInIl2Cpp]
     public class BlackJack : MonoBehaviour
     {
-        private static int betAmount = 1, betHeldAmount = 0;
-        private static bool gameLoopRunning = false;
-        private static TextMeshPro betTextComponent = null;
-        private static GameObject storedBetsMenu = null, storedOptionsMenu = null;
-        private static bool betAccepted = false, userQuits = false;
-        private static List<int> deck, dealerHand;
-        private static List<List<int>> hand;
-        public static object gameLoopCoroutine = null;
-        private static Transform storedGamePartsTransform = null, activeGamePartsTransform = null;
+        private int betAmount = 1, betHeldAmount = 0;
+        private bool gameLoopRunning = false;
+        private TextMeshPro betTextComponent = null;
+        private GameObject storedBetsMenu = null, storedOptionsMenu = null;
+        private bool betAccepted = false, userQuits = false;
+        private List<int> deck, dealerHand;
+        private List<List<int>> hand;
+        public object gameLoopCoroutine = null;
+        private Transform storedGamePartsTransform = null, activeGamePartsTransform = null;
+        private Table tableInstance;
+        private GameObject cardSpots = null;
+        private bool has21Immediately = false;
+
+        public BlackJack(Table tableInstance)
+        {
+            this.tableInstance = tableInstance;
+        }
 
         public static void Log(string msg, bool sendMsg = true)
         {
@@ -41,16 +48,16 @@ namespace PokerTable
             Table.Error($"BlackJack - {msg}");
         }
 
-        public static void ShowSplash()
+        public void ShowSplash()
         {
-            storedGamePartsTransform = Main.loadedTable.transform.GetChild(1);
-            activeGamePartsTransform = Main.loadedTable.transform.GetChild(2);
+            storedGamePartsTransform = tableInstance.transform.GetChild(1);
+            activeGamePartsTransform = tableInstance.transform.GetChild(2);
             GameObject splashScreen = new GameObject("SplashScreen");
             splashScreen.transform.SetParent(activeGamePartsTransform);
             splashScreen.transform.localPosition = new Vector3(0, 0.9454f, 0);
             splashScreen.transform.localRotation = Quaternion.identity;
             splashScreen.transform.localScale = Vector3.one;
-            GameObject splashScreenText = Table.SpawnText(splashScreen.transform,
+            GameObject splashScreenText = tableInstance.SpawnText(splashScreen.transform,
                 /*Title*/"BlackJack",
                 /*position*/ new Vector3(0f, 0f, 0.4f),
                 /*rotation*/Quaternion.Euler(90f, 180f, 0f),
@@ -60,16 +67,17 @@ namespace PokerTable
             splashScreenTextTMP.enableWordWrapping = false;
         }
 
-        public static IEnumerator Run()
+        public IEnumerator Run()
         {
             Log("Run Running", (bool)Main.debugging.SavedValue);
             SetupStart();
             gameLoopCoroutine = MelonCoroutines.Start(GameLoop());
             yield return gameLoopCoroutine;
             Log("Run Completed", (bool)Main.debugging.SavedValue);
+            yield break;
         }
 
-        private static void SetupStart()
+        private void SetupStart()
         {
             Log("SetupStart Running", (bool)Main.debugging.SavedValue);
             gameLoopRunning = false;
@@ -79,8 +87,7 @@ namespace PokerTable
             Log("SetupStart Completed", (bool)Main.debugging.SavedValue);
         }
 
-        private static GameObject cardSpots = null;
-        private static void SetupCardSpots()
+        private void SetupCardSpots()
         {
             cardSpots = GameObject.Instantiate(storedGamePartsTransform.GetChild(1).gameObject);
             cardSpots.name = "CardSpots";
@@ -90,8 +97,8 @@ namespace PokerTable
             cardSpots.transform.localScale = Vector3.one;
         }
 
-        private static int coinsGained = 0;
-        private static IEnumerator GameLoop()
+        private int coinsGained = 0;
+        private IEnumerator GameLoop()
         {
             Log("GameLoop Running", (bool)Main.debugging.SavedValue);
             gameLoopRunning = true;
@@ -105,11 +112,11 @@ namespace PokerTable
                 }
                 //check for coins
                 betAmount = 1;
-                if (!Table.freePlay && Main.GetPlayerCoinCount() < betAmount)
+                if (!tableInstance.freePlay && Main.GetPlayerCoinCount() < betAmount)
                 {
-                    GameObject youBrokeAsFuck = Table.SpawnText(activeGamePartsTransform.transform,
+                    GameObject youBrokeAsFuck = tableInstance.SpawnText(activeGamePartsTransform.transform,
                         /*Title*/$"Too Few Coins. Try Free Play or{Environment.NewLine}Complete More Poses to Earn Coins",
-                        /*position*/ new Vector3(0f, Table.TABLEHEIGHT - 0.025f, 0.65f),
+                        /*position*/ new Vector3(0f, tableInstance.TABLEHEIGHT - 0.025f, 0.65f),
                         /*rotation*/Quaternion.Euler(90, 180, 0),
                         /*scale*/ new Vector3(1f, 1f, 1f));
                     youBrokeAsFuck.name = "You Broke As Fuck";
@@ -123,9 +130,9 @@ namespace PokerTable
                     break;
                 }
                 //starting bet
-                Table.ClearActiveObjects();
+                tableInstance.ClearActiveObjects();
                 yield return MelonCoroutines.Start(RunBetMenu());
-                Table.ClearActiveObjects();
+                tableInstance.ClearActiveObjects();
                 yield return new WaitForSeconds(1.5f);
                 //-user quits
                 if (userQuits)
@@ -136,7 +143,7 @@ namespace PokerTable
                 if (betAccepted)
                 {
                     Log("Player Bet Accepted: " + betAmount, true);
-                    Main.Payout(-betAmount, 1f);
+                    Main.Payout(-betAmount, 1f, tableInstance);
                     betHeldAmount = betAmount;
                     coinsGained = 0;
                     //players turn
@@ -161,12 +168,12 @@ namespace PokerTable
                         string cardString0 = "";
                         foreach (int card in hand[i])
                         {
-                            cardString0 += Table.CardString[card] + " ";
+                            cardString0 += tableInstance.CardString[card] + " ";
                         }
                         string cardString1 = "";
                         foreach (int card in dealerHand)
                         {
-                            cardString1 += Table.CardString[card] + " ";
+                            cardString1 += tableInstance.CardString[card] + " ";
                         }
                         Log($"Checking Hand {i}: Player {playerHandTotals[i]} ( {cardString0}) vs Dealer {dealerHandTotal} ( {cardString1})", true);
                         yield return new WaitForSeconds(0.5f);
@@ -174,7 +181,7 @@ namespace PokerTable
                         if (has21Immediately)
                         {
                             Log($"Player Got 21 Immediately! Gained {betAmount * 2} Coins", true);
-                            coinsGained += Main.Payout(betAmount, 2f);
+                            coinsGained += Main.Payout(betAmount, 2f, tableInstance);
                             endGameCoroutine0 = MelonCoroutines.Start(PlayPlayerWin(handCards, dealerCards));
                         }
                         //player Bust
@@ -182,13 +189,14 @@ namespace PokerTable
                         {
                             Log($"Player Bust, Lost {betAmount} Coins", true);
                             betHeldAmount -= betAmount;
+                            coinsGained -= betAmount;
                             endGameCoroutine0 = MelonCoroutines.Start(PlayPlayerBust(handCards));
                         }
                         //if player beat dealer or if dealer bust
                         else if ((playerHandTotals[i] > dealerHandTotal) || ((dealerHandTotal > 21)))
                         {
                             Log($"Player Beat Dealer! Gained {(int)(((float)betAmount) * 1.5f)} Coins", true);
-                            coinsGained += Main.Payout(betAmount, 1.5f);
+                            coinsGained += Main.Payout(betAmount, 1.5f, tableInstance);
                             endGameCoroutine0 = MelonCoroutines.Start(PlayPlayerWin(handCards, dealerCards));
                         }
                         //if player didnt beat dealer
@@ -196,6 +204,7 @@ namespace PokerTable
                         {
                             Log($"Player Didn't Beat Dealer, Lost {betAmount} Coins", true);
                             betHeldAmount -= betAmount;
+                            coinsGained -= betAmount;
                             endGameCoroutine0 = MelonCoroutines.Start(PlayDealerWin(handCards, dealerCards));
                         }
                         if (dealerHandTotal > 21)
@@ -209,12 +218,13 @@ namespace PokerTable
                         foreach (GameObject handCard in handCards) { GameObject.Destroy(handCard); }
                         foreach (GameObject dealerCard in dealerCards) { GameObject.Destroy(dealerCard); }
                     }
-                    Main.Payout(betHeldAmount, 1f);
+                    Main.Payout(betHeldAmount, 1f, tableInstance);
                     bool continuePressed = false;
+                    string coinLine = coinsGained < 0 ? $"Coins Lost: {-coinsGained}" : $"Coins Gained: {coinsGained}";
                     //load end game text
-                    GameObject endGameText = Table.SpawnText(activeGamePartsTransform.transform,
-                        /*Title*/$"Total Coins Gained: {coinsGained}",
-                        /*position*/ new Vector3(0f, Table.TABLEHEIGHT - 0.025f, 0.5f),
+                    GameObject endGameText = tableInstance.SpawnText(activeGamePartsTransform.transform,
+                        /*Title*/coinLine,
+                        /*position*/ new Vector3(0f, tableInstance.TABLEHEIGHT - 0.025f, 0.5f),
                         /*rotation*/Quaternion.Euler(90, 180, 0),
                         /*scale*/ new Vector3(1f, 1f, 1f));
                     endGameText.name = "End Game Text";
@@ -222,8 +232,8 @@ namespace PokerTable
                     endGameTextTMP.alignment = TextAlignmentOptions.Center;
                     endGameTextTMP.enableWordWrapping = false;
                     //load continue button
-                    GameObject continueButton = Table.instance.LoadMenuButton("Continue",
-                        /*position*/ new Vector3(0f, Table.TABLEHEIGHT - 0.025f, 0.96f),
+                    GameObject continueButton = tableInstance.LoadMenuButton("Continue",
+                        /*position*/ new Vector3(0f, tableInstance.TABLEHEIGHT - 0.025f, 0.96f),
                         /*rotation*/Quaternion.Euler(0, 0, 0),
                         /*scale*/ new Vector3(0.5f, 0.5f, 0.5f),
                         () => { continuePressed = true; });
@@ -234,13 +244,13 @@ namespace PokerTable
                         yield return new WaitForFixedUpdate();
                     }
                 }
-                Table.ClearActiveObjects();
+                tableInstance.ClearActiveObjects();
             }
             Log("GameLoop Completed", (bool)Main.debugging.SavedValue);
             yield break;
         }
 
-        private static IEnumerator PlayPlayerWin(List<GameObject> handCards, List<GameObject> dealerCards)
+        private IEnumerator PlayPlayerWin(List<GameObject> handCards, List<GameObject> dealerCards)
         {
             Log("PlayPlayerWin Started", (bool)Main.debugging.SavedValue);
             List<object> cardsReacting = new List<object>();
@@ -260,12 +270,12 @@ namespace PokerTable
             yield break;
         }
 
-        private static object PlayCardReact(GameObject card, bool win, bool isPlayer)
+        private object PlayCardReact(GameObject card, bool win, bool isPlayer)
         {
             return MelonCoroutines.Start(PlayCardReactCoroutine(card, win, isPlayer));
         }
 
-        private static IEnumerator PlayCardReactCoroutine(GameObject card, bool win, bool isPlayer)
+        private IEnumerator PlayCardReactCoroutine(GameObject card, bool win, bool isPlayer)
         {
             Vector3 startingPostion = card.transform.localPosition;
             Vector3 movePerTick = ((isPlayer ? Vector3.back : Vector3.forward) / 50f) * (win ? 0.5f : -0.25f);
@@ -280,9 +290,10 @@ namespace PokerTable
                 yield return new WaitForFixedUpdate();
             }
             card.transform.localPosition = startingPostion;
+            yield break;
         }
 
-        private static IEnumerator PlayPlayerBust(List<GameObject> handCards)
+        private IEnumerator PlayPlayerBust(List<GameObject> handCards)
         {
             Log("PlayPlayerBust Started", (bool)Main.debugging.SavedValue);
             List<object> cardsReacting = new List<object>();
@@ -298,7 +309,7 @@ namespace PokerTable
             yield break;
         }
 
-        private static IEnumerator PlayDealerBust(List<GameObject> handCards)
+        private IEnumerator PlayDealerBust(List<GameObject> handCards)
         {
             Log("PlayDealerBust Started", (bool)Main.debugging.SavedValue);
             List<object> cardsReacting = new List<object>();
@@ -314,7 +325,7 @@ namespace PokerTable
             yield break;
         }
 
-        private static IEnumerator PlayCardBustCoroutine(GameObject card)
+        private IEnumerator PlayCardBustCoroutine(GameObject card)
         {
             Log("PlayCardBustCoroutine Started", (bool)Main.debugging.SavedValue);
             Vector3 startingScale = card.transform.localScale;
@@ -328,7 +339,7 @@ namespace PokerTable
             yield break;
         }
 
-        private static IEnumerator PlayDealerWin(List<GameObject> handCards, List<GameObject> dealerCards)
+        private IEnumerator PlayDealerWin(List<GameObject> handCards, List<GameObject> dealerCards)
         {
             Log("PlayDealerWin Started", (bool)Main.debugging.SavedValue);
             List<object> cardsReacting = new List<object>();
@@ -348,12 +359,12 @@ namespace PokerTable
             yield break;
         }
 
-        private static List<GameObject> SpawnHandCards(int thisHand)
+        private List<GameObject> SpawnHandCards(int thisHand)
         {
             List<GameObject> handsCards = new List<GameObject>();
             for (int i = 0; i < hand[thisHand].Count; i++)
             {
-                GameObject aCard = GameObject.Instantiate(Table.storedDeckOfCards.transform.GetChild(hand[thisHand][i]).gameObject);
+                GameObject aCard = GameObject.Instantiate(tableInstance.storedDeckOfCards.transform.GetChild(hand[thisHand][i]).gameObject);
                 aCard.transform.SetParent(cardSpots.transform.GetChild(0).GetChild(i));
                 aCard.transform.localPosition = Vector3.zero;
                 aCard.transform.localRotation = Quaternion.identity;
@@ -362,12 +373,12 @@ namespace PokerTable
             return handsCards;
         }
 
-        private static List<GameObject> SpawnDealerCards()
+        private List<GameObject> SpawnDealerCards()
         {
             List<GameObject> dealerCards = new List<GameObject>();
             for (int i = 0; i < dealerHand.Count; i++)
             {
-                GameObject aCard = GameObject.Instantiate(Table.storedDeckOfCards.transform.GetChild(dealerHand[i]).gameObject);
+                GameObject aCard = GameObject.Instantiate(tableInstance.storedDeckOfCards.transform.GetChild(dealerHand[i]).gameObject);
                 aCard.transform.SetParent(cardSpots.transform.GetChild(1).GetChild(i));
                 aCard.transform.localPosition = Vector3.zero;
                 aCard.transform.localRotation = Quaternion.identity;
@@ -376,12 +387,12 @@ namespace PokerTable
             return dealerCards;
         }
 
-        private static IEnumerator RevealDealerCard()
+        private IEnumerator RevealDealerCard()
         {
             Log("RevealDealerCard Started", (bool)Main.debugging.SavedValue);
             float rotationPerTick = 180f / 25f;
             Transform dealerCard = cardSpots.transform.GetChild(1).GetChild(1).GetChild(0);
-            GameObject newCard = GameObject.Instantiate(Table.storedDeckOfCards.transform.GetChild(dealerHand[1]).gameObject);
+            GameObject newCard = GameObject.Instantiate(tableInstance.storedDeckOfCards.transform.GetChild(dealerHand[1]).gameObject);
             newCard.transform.SetParent(dealerCard.transform.parent);
             newCard.transform.position = dealerCard.transform.position;
             newCard.transform.rotation = dealerCard.transform.rotation;
@@ -401,7 +412,7 @@ namespace PokerTable
             yield break;
         }
 
-        private static List<int> GetPlayerHandTotal()
+        private List<int> GetPlayerHandTotal()
         {
             Log("GetPlayerHandTotal Started", (bool)Main.debugging.SavedValue);
             List<int> hands = new List<int>();
@@ -434,7 +445,7 @@ namespace PokerTable
             return hands;
         }
 
-        private static int GetDealerHandTotal()
+        private int GetDealerHandTotal()
         {
             Log("GetDealerHandTotal Started", (bool)Main.debugging.SavedValue);
             int total = 0;
@@ -461,7 +472,7 @@ namespace PokerTable
             return total;
         }
 
-        private static int GetCardsTotal(List<int> cards)
+        private int GetCardsTotal(List<int> cards)
         {
             Log("GetCardsTotal Started", (bool)Main.debugging.SavedValue);
             int total = 0;
@@ -479,7 +490,7 @@ namespace PokerTable
                     hasAce = true;
                 }
                 total += card;
-                Log($"Card {Table.CardString[i]}: {card}", (bool)Main.debugging.SavedValue);
+                Log($"Card {tableInstance.CardString[i]}: {card}", (bool)Main.debugging.SavedValue);
             }
             if (hasAce && total <= 11)
             {
@@ -490,8 +501,7 @@ namespace PokerTable
             return total;
         }
 
-        private static bool has21Immediately;
-        private static IEnumerator PlayHands()
+        private IEnumerator PlayHands()
         {
             Log("PlayHands Running", (bool)Main.debugging.SavedValue);
             hand = new List<List<int>>();
@@ -501,23 +511,23 @@ namespace PokerTable
             int thisHand = hand.Count;
             hand.Add(new List<int>());
             hand[hand.Count - 1].Add(DrawCard());
-            Log("Player Card 1: " + Table.CardString[hand[hand.Count - 1][0]], (bool)Main.debugging.SavedValue);
-            object playDrawAnimationCoroutine = PlayDrawCardAnimation(hand[hand.Count - 1][0], cardSpots.transform.GetChild(0).GetChild(0), Table.dealerDeck.transform.GetChild(0).GetChild(0).position, Quaternion.Euler(-180, 0, 0));
+            Log("Player Card 1: " + tableInstance.CardString[hand[hand.Count - 1][0]], (bool)Main.debugging.SavedValue);
+            object playDrawAnimationCoroutine = PlayDrawCardAnimation(hand[hand.Count - 1][0], cardSpots.transform.GetChild(0).GetChild(0), tableInstance.dealerDeck.transform.GetChild(0).GetChild(0).position, Quaternion.Euler(-180, 0, 0));
             yield return playDrawAnimationCoroutine;
 
             dealerHand.Add(DrawCard());
-            Log("Dealer Card 1: " + Table.CardString[dealerHand[0]], (bool)Main.debugging.SavedValue);
-            object playDrawAnimationCoroutine2 = PlayDrawCardAnimation(dealerHand[0], cardSpots.transform.GetChild(1).GetChild(0), Table.dealerDeck.transform.GetChild(0).GetChild(0).position, Quaternion.Euler(-180, 0, 0));
+            Log("Dealer Card 1: " + tableInstance.CardString[dealerHand[0]], (bool)Main.debugging.SavedValue);
+            object playDrawAnimationCoroutine2 = PlayDrawCardAnimation(dealerHand[0], cardSpots.transform.GetChild(1).GetChild(0), tableInstance.dealerDeck.transform.GetChild(0).GetChild(0).position, Quaternion.Euler(-180, 0, 0));
             yield return playDrawAnimationCoroutine2;
 
             hand[hand.Count - 1].Add(DrawCard());
-            Log("Player Card 2: " + Table.CardString[hand[hand.Count - 1][1]], (bool)Main.debugging.SavedValue);
-            object playDrawAnimationCoroutine3 = PlayDrawCardAnimation(hand[hand.Count - 1][1], cardSpots.transform.GetChild(0).GetChild(1), Table.dealerDeck.transform.GetChild(0).GetChild(0).position, Quaternion.Euler(-180, 0, 0));
+            Log("Player Card 2: " + tableInstance.CardString[hand[hand.Count - 1][1]], (bool)Main.debugging.SavedValue);
+            object playDrawAnimationCoroutine3 = PlayDrawCardAnimation(hand[hand.Count - 1][1], cardSpots.transform.GetChild(0).GetChild(1), tableInstance.dealerDeck.transform.GetChild(0).GetChild(0).position, Quaternion.Euler(-180, 0, 0));
             yield return playDrawAnimationCoroutine3;
             
             dealerHand.Add(DrawCard());
             Log("Dealer Card 2: -_-", (bool)Main.debugging.SavedValue);
-            object playDrawAnimationCoroutine4 = PlayDrawCardAnimation(52, cardSpots.transform.GetChild(1).GetChild(1), Table.dealerDeck.transform.GetChild(0).GetChild(0).position, Quaternion.Euler(-180, 0, 0), false);
+            object playDrawAnimationCoroutine4 = PlayDrawCardAnimation(52, cardSpots.transform.GetChild(1).GetChild(1), tableInstance.dealerDeck.transform.GetChild(0).GetChild(0).position, Quaternion.Euler(-180, 0, 0), false);
             yield return playDrawAnimationCoroutine4;
             //starting hands have been dealt
             if (GetCardsTotal(hand[thisHand]) == 21)
@@ -535,10 +545,10 @@ namespace PokerTable
         }
 
         //Note: position, not localPosition. This sets the linear path to localPosition 0,0 in animation
-        private static object PlayDrawCardAnimation(int CardToDraw, Transform parent, Vector3 position, Quaternion localRotation, bool playRotate = true)
+        private object PlayDrawCardAnimation(int CardToDraw, Transform parent, Vector3 position, Quaternion localRotation, bool playRotate = true)
         {
             Log("PlayDrawCardAnimation Started", (bool)Main.debugging.SavedValue);
-            GameObject card = GameObject.Instantiate(Table.storedDeckOfCards.transform.GetChild(CardToDraw).gameObject);
+            GameObject card = GameObject.Instantiate(tableInstance.storedDeckOfCards.transform.GetChild(CardToDraw).gameObject);
             card.transform.SetParent(parent);
             card.transform.position = position;
             card.transform.localRotation = localRotation;
@@ -546,16 +556,17 @@ namespace PokerTable
             return MelonCoroutines.Start(PlayDrawAnimation(card, 25, playRotate));
         }
 
-        private static int DrawCard()
+        private int DrawCard()
         {
+            if (deck.Count == 0) { RandomizeDeck(); }
             int card = deck[0];
             deck.RemoveAt(0);
-            Table.dealerDeck.transform.localScale = new Vector3(1, ((float)deck.Count) / 52f, 1);
+            tableInstance.dealerDeck.transform.localScale = new Vector3(1, ((float)deck.Count) / 52f, 1);
             return card;
         }
 
         //moves it to localPosition 0. flips 180 unless specified (dealer card 2)
-        private static IEnumerator PlayDrawAnimation(GameObject card, int ticks = 25, bool playRotate = true)
+        private IEnumerator PlayDrawAnimation(GameObject card, int ticks = 25, bool playRotate = true)
         {
             Log("PlayDrawAnimation Started", (bool)Main.debugging.SavedValue);
             Vector3 distancePerTick = (card.transform.localPosition) / ticks;
@@ -578,7 +589,7 @@ namespace PokerTable
         }
 
         //spawns bet menu and waits for an option to be pressed
-        private static IEnumerator RunBetMenu()
+        private IEnumerator RunBetMenu()
         {
             Log("RunBetMenu Started", (bool)Main.debugging.SavedValue);
             betAmount = 1;
@@ -597,12 +608,12 @@ namespace PokerTable
             yield break;
         }
 
-        private static GameObject SpawnBetsMenu()
+        private GameObject SpawnBetsMenu()
         {
             Log("SpawnBetsMenu Started", (bool)Main.debugging.SavedValue);
             GameObject spawnedBetsMenu = GameObject.Instantiate(storedBetsMenu);
             spawnedBetsMenu.transform.SetParent(activeGamePartsTransform);
-            spawnedBetsMenu.transform.localPosition = new Vector3(0, Table.TABLEHEIGHT - 0.052f, 0);
+            spawnedBetsMenu.transform.localPosition = new Vector3(0, tableInstance.TABLEHEIGHT - 0.052f, 0);
             spawnedBetsMenu.transform.localRotation = Quaternion.identity;
             spawnedBetsMenu.transform.localScale = Vector3.one;
 
@@ -628,33 +639,53 @@ namespace PokerTable
                     UpdateBetAmountText();
                 }
             }));
-            //Bet Accepted
+            //Bet Down 10
             spawnedBetsMenu.transform.GetChild(4).GetChild(0).GetComponent<InteractionButton>().onPressed.AddListener((Action)(() => {
+                Log("Bet Down Pressed", (bool)Main.debugging.SavedValue);
+                if (10 < betAmount)
+                {
+                    betAmount -= 10;
+                    Log("New Bet: " + betAmount, (bool)Main.debugging.SavedValue);
+                    UpdateBetAmountText();
+                }
+            }));
+            //Bet Up 10
+            spawnedBetsMenu.transform.GetChild(5).GetChild(0).GetComponent<InteractionButton>().onPressed.AddListener((Action)(() => {
+                Log("Bet Up Pressed", (bool)Main.debugging.SavedValue);
+                if (Main.GetPlayerCoinCount() >= betAmount + 10)
+                {
+                    betAmount += 10;
+                    Log("New Bet: " + betAmount, (bool)Main.debugging.SavedValue);
+                    UpdateBetAmountText();
+                }
+            }));
+            //Bet Accepted
+            spawnedBetsMenu.transform.GetChild(6).GetChild(0).GetComponent<InteractionButton>().onPressed.AddListener((Action)(() => {
                 Log("Bet Accepted: " + betAmount, (bool)Main.debugging.SavedValue);
                 betAccepted = true;
                 continueShuffling = false;
             }));
             //Quit
-            spawnedBetsMenu.transform.GetChild(5).GetChild(0).GetComponent<InteractionButton>().onPressed.AddListener((Action)(() => {
+            spawnedBetsMenu.transform.GetChild(7).GetChild(0).GetComponent<InteractionButton>().onPressed.AddListener((Action)(() => {
                 Log("User Quit During Betting", (bool)Main.debugging.SavedValue);
                 userQuits = true;
                 continueShuffling = false;
             }));
             //Bet Min
-            spawnedBetsMenu.transform.GetChild(6).GetChild(0).GetComponent<InteractionButton>().onPressed.AddListener((Action)(() => {
+            spawnedBetsMenu.transform.GetChild(8).GetChild(0).GetComponent<InteractionButton>().onPressed.AddListener((Action)(() => {
                 Log("Bet Min Pressed", (bool)Main.debugging.SavedValue);
                 betAmount = 1;
                 Log("New Bet: " + betAmount, (bool)Main.debugging.SavedValue);
                 UpdateBetAmountText();
             }));
             //Bet Max
-            spawnedBetsMenu.transform.GetChild(7).GetChild(0).GetComponent<InteractionButton>().onPressed.AddListener((Action)(() => {
+            spawnedBetsMenu.transform.GetChild(9).GetChild(0).GetComponent<InteractionButton>().onPressed.AddListener((Action)(() => {
                 Log("Bet Max Pressed", (bool)Main.debugging.SavedValue);
                 betAmount = Main.GetPlayerCoinCount();
                 Log("New Bet: " + betAmount, (bool)Main.debugging.SavedValue);
                 UpdateBetAmountText();
             }));
-            spawnedBetsMenu.transform.GetChild(7).GetChild(2).localPosition = new Vector3(0f, 0f, -0.25f); //fixes weirdness about Text not being correct
+            spawnedBetsMenu.transform.GetChild(9).GetChild(2).localPosition = new Vector3(0f, 0f, -0.25f); //fixes weirdness about Text not being correct
 
             betAccepted = false;
             userQuits = false;
@@ -662,10 +693,10 @@ namespace PokerTable
             return spawnedBetsMenu;
         }
 
-        private static void RandomizeDeck(bool continueShuffling = true)
+        private void RandomizeDeck(bool continueShuffling = true)
         {
             Log("RandomizeDeck Running", (bool)Main.debugging.SavedValue);
-            object[] shufflings = Table.ShuffleDealerDeck();
+            object[] shufflings = tableInstance.ShuffleDealerDeck();
             if (continueShuffling)
             {
                 ContinueShufflings(shufflings);
@@ -680,11 +711,11 @@ namespace PokerTable
                 if (cardCount == 52) { cardCount = 0; }
             }
             Log("Deck Setup Done", (bool)Main.debugging.SavedValue);
-            Table.dealerDeck.transform.localScale = new Vector3(1, ((float)deck.Count) / 52f, 1);
+            tableInstance.dealerDeck.transform.localScale = new Vector3(1, ((float)deck.Count) / 52f, 1);
             tempDeck.Clear();
             while (deck.Count > 0)
             {
-                int spot = Table.random.Next(deck.Count);
+                int spot = tableInstance.random.Next(deck.Count);
                 tempDeck.Add(deck[spot]);
                 deck.RemoveAt(spot);
             }
@@ -692,31 +723,31 @@ namespace PokerTable
             Log("RandomizeDeck Complete", (bool)Main.debugging.SavedValue);
         }
 
-        private static bool continueShuffling = true;
-        private static void ContinueShufflings(object[] shufflings)
+        private bool continueShuffling = true;
+        private void ContinueShufflings(object[] shufflings)
         {
             continueShuffling = true;
-            Transform cardsParent = Table.dealerDeck.transform.GetChild(0).GetChild(0).GetChild(0);
+            Transform cardsParent = tableInstance.dealerDeck.transform.GetChild(0).GetChild(0).GetChild(0);
             for (int i = 0; i < shufflings.Length; i++)
             {
                 MelonCoroutines.Start(ShufflingCard(cardsParent.transform.GetChild(i).gameObject, shufflings[i]));
             }
         }
 
-        private static IEnumerator ShufflingCard(GameObject card, object spinCoroutine)
+        private IEnumerator ShufflingCard(GameObject card, object spinCoroutine)
         {
-            Transform cardsParent = Table.dealerDeck.transform.GetChild(0).GetChild(0).GetChild(0);
+            Transform cardsParent = tableInstance.dealerDeck.transform.GetChild(0).GetChild(0).GetChild(0);
             yield return spinCoroutine;
-            while (continueShuffling)
+            while (continueShuffling && tableInstance.blackJackInstance != null)
             {
-                spinCoroutine = MelonCoroutines.Start(Table.SpinCard(card));
+                spinCoroutine = MelonCoroutines.Start(tableInstance.SpinCard(card));
                 yield return spinCoroutine;
                 yield return new WaitForFixedUpdate();
             }
             yield break;
         }
 
-        private static void SetupBetMenu()
+        private void SetupBetMenu()
         {
             Log("SetupBetMenu Started", (bool)Main.debugging.SavedValue);
             if (storedBetsMenu != null) { GameObject.Destroy(storedBetsMenu); }
@@ -726,7 +757,7 @@ namespace PokerTable
             storedBetsMenu.transform.localRotation = Quaternion.identity;
             storedBetsMenu.transform.localScale = Vector3.one;
 
-            GameObject betTitleText = Table.SpawnText(storedBetsMenu.transform,
+            GameObject betTitleText = tableInstance.SpawnText(storedBetsMenu.transform,
                 /*Title*/"How Much To Bet?",
                 /*position*/ new Vector3(0f, 0f, 0.35f),
                 /*rotation*/Quaternion.Euler(90f, 180f, 0f),
@@ -735,7 +766,7 @@ namespace PokerTable
             betTitleTextTMP.alignment = TextAlignmentOptions.Center;
             betTitleTextTMP.enableWordWrapping = false;
 
-            GameObject betText = Table.SpawnText(storedBetsMenu.transform,
+            GameObject betText = tableInstance.SpawnText(storedBetsMenu.transform,
                 /*Title*/"BetText",
                 /*position*/ new Vector3(0f, 0f, 0.5f),
                 /*rotation*/Quaternion.Euler(90, 180, 0),
@@ -746,37 +777,49 @@ namespace PokerTable
             betTextComponent = betText.GetComponent<TextMeshPro>();
             UpdateBetAmountText();
 
-            GameObject betDownButton = Table.SpawnButton(storedBetsMenu.transform,
-                /*Title*/"Down",
-                /*position*/ new Vector3(0.25f, 0f, 0.9f),
+            GameObject betDownButton = tableInstance.SpawnButton(storedBetsMenu.transform,
+                /*Title*/"-1",
+                /*position*/ new Vector3(0.15f, 0f, 0.9f),
                 /*rotation*/Quaternion.Euler(0, 0, 0),
                 /*scale*/ new Vector3(0.5f, 0.5f, 0.5f));
 
-            GameObject betUpButton = Table.SpawnButton(storedBetsMenu.transform,
-                /*Title*/"Up",
-                /*position*/ new Vector3(-0.25f, 0f, 0.9f),
+            GameObject betUpButton = tableInstance.SpawnButton(storedBetsMenu.transform,
+                /*Title*/"+1",
+                /*position*/ new Vector3(-0.15f, 0f, 0.9f),
                 /*rotation*/Quaternion.Euler(0, 0, 0),
                 /*scale*/ new Vector3(0.5f, 0.5f, 0.5f));
 
-            GameObject betAcceptButton = Table.SpawnButton(storedBetsMenu.transform,
+            GameObject betDownTenButton = tableInstance.SpawnButton(storedBetsMenu.transform,
+                /*Title*/"-10",
+                /*position*/ new Vector3(0.325f, 0f, 0.85f),
+                /*rotation*/Quaternion.Euler(0, 0, 0),
+                /*scale*/ new Vector3(0.5f, 0.5f, 0.5f));
+
+            GameObject betUpTenButton = tableInstance.SpawnButton(storedBetsMenu.transform,
+                /*Title*/"+10",
+                /*position*/ new Vector3(-0.325f, 0f, 0.85f),
+                /*rotation*/Quaternion.Euler(0, 0, 0),
+                /*scale*/ new Vector3(0.5f, 0.5f, 0.5f));
+
+            GameObject betAcceptButton = tableInstance.SpawnButton(storedBetsMenu.transform,
                 /*Title*/"Accept",
                 /*position*/ new Vector3(0f, 0f, 0.75f),
                 /*rotation*/Quaternion.Euler(0, 0, 0),
                 /*scale*/ new Vector3(0.5f, 0.5f, 0.5f));
 
-            GameObject UserQuitButton = Table.SpawnButton(storedBetsMenu.transform,
+            GameObject UserQuitButton = tableInstance.SpawnButton(storedBetsMenu.transform,
                 /*Title*/"Exit",
                 /*position*/ new Vector3(0.75f, 0f, 0.25f),
                 /*rotation*/Quaternion.Euler(0, 0, 0),
                 /*scale*/ new Vector3(0.5f, 0.5f, 0.5f));
 
-            GameObject betMinButton = Table.SpawnButton(storedBetsMenu.transform,
+            GameObject betMinButton = tableInstance.SpawnButton(storedBetsMenu.transform,
                 /*Title*/"Min",
                 /*position*/ new Vector3(0.5f, 0f, 0.8f),
                 /*rotation*/Quaternion.Euler(0, 0, 0),
                 /*scale*/ new Vector3(0.5f, 0.5f, 0.5f));
 
-            GameObject betMaxButton = Table.SpawnButton(storedBetsMenu.transform,
+            GameObject betMaxButton = tableInstance.SpawnButton(storedBetsMenu.transform,
                 /*Title*/"Max",
                 /*position*/ new Vector3(-0.5f, 0f, 0.8f),
                 /*rotation*/Quaternion.Euler(0, 0, 0),
@@ -784,10 +827,10 @@ namespace PokerTable
             Log("SetupBetMenu Completed", (bool)Main.debugging.SavedValue);
         }
 
-        private static bool pressedStay;
-        private static bool pressedHit;
-        private static bool pressedSplit;
-        private static GameObject SpawnOptionsMenu(int thisHand)
+        private bool pressedStay;
+        private bool pressedHit;
+        private bool pressedSplit;
+        private GameObject SpawnOptionsMenu(int thisHand)
         {
             Log("SpawnOptionsMenu Started", (bool)Main.debugging.SavedValue);
             pressedStay = false;
@@ -795,7 +838,7 @@ namespace PokerTable
             pressedSplit = false;
             GameObject spawnedOptionsMenu = GameObject.Instantiate(storedOptionsMenu);
             spawnedOptionsMenu.transform.SetParent(activeGamePartsTransform);
-            spawnedOptionsMenu.transform.localPosition = new Vector3(0, Table.TABLEHEIGHT - 0.052f, 0);
+            spawnedOptionsMenu.transform.localPosition = new Vector3(0, tableInstance.TABLEHEIGHT - 0.052f, 0);
             spawnedOptionsMenu.transform.localRotation = Quaternion.identity;
             spawnedOptionsMenu.transform.localScale = Vector3.one;
             //Stay
@@ -819,12 +862,26 @@ namespace PokerTable
                 spawnedOptionsMenu.transform.GetChild(2).GetChild(2).localPosition = new Vector3(0f, 0f, -0.25f); //fixes weirdness about Text not being correct
                 spawnedOptionsMenu.transform.GetChild(2).gameObject.SetActive(true);
             }
+            //Hand Text
+            spawnedOptionsMenu.transform.GetChild(3).GetComponent<TextMeshPro>().text = (GetPlayerHandTotal()[thisHand]).ToString();
+            spawnedOptionsMenu.transform.GetChild(3).localPosition = new Vector3(-0.15f, 0f, 0.6f); //fixes weirdness about Text not being correct
+            spawnedOptionsMenu.transform.GetChild(3).gameObject.SetActive((bool)Main.showHandCount.SavedValue);
+
+            //Dealer Hand Text
+            string total;
+            int card = dealerHand[0];
+            while (card >= 13) { card -= 13; }
+            total = Math.Min(card + 1, 10).ToString();
+            spawnedOptionsMenu.transform.GetChild(4).GetComponent<TextMeshPro>().text = total;
+            spawnedOptionsMenu.transform.GetChild(4).gameObject.SetActive((bool)Main.showHandCount.SavedValue);
+            spawnedOptionsMenu.transform.GetChild(4).localPosition = new Vector3(-0.15f, 0f, 0.55f); //fixes weirdness about Text not being correct
+            spawnedOptionsMenu.transform.GetChild(4).gameObject.SetActive((bool)Main.showHandCount.SavedValue);
             Log("SpawnOptionsMenu Completed", (bool)Main.debugging.SavedValue);
             return spawnedOptionsMenu;
         }
 
         //spawns optionsMenu menu and waits for an option to be pressed
-        private static IEnumerator RunOptionsMenu(int thisHand)
+        private IEnumerator RunOptionsMenu(int thisHand)
         {
             Log("RunOptionsMenu Started", (bool)Main.debugging.SavedValue);
             GameObject optionsMenu = SpawnOptionsMenu(thisHand);
@@ -839,8 +896,8 @@ namespace PokerTable
                 Log("Pressed Hit", (bool)Main.debugging.SavedValue);
                 hand[thisHand].Add(DrawCard());
                 //add drawing card visual
-                Log($"Player Card {hand[thisHand].Count}: {Table.CardString[hand[thisHand][hand[thisHand].Count - 1]]}", (bool)Main.debugging.SavedValue);
-                object playDrawAnimationCoroutine = PlayDrawCardAnimation(hand[thisHand][hand[thisHand].Count - 1], cardSpots.transform.GetChild(0).GetChild(hand[thisHand].Count - 1), Table.dealerDeck.transform.GetChild(0).GetChild(0).position, Quaternion.Euler(-180, 0, 0));
+                Log($"Player Card {hand[thisHand].Count}: {tableInstance.CardString[hand[thisHand][hand[thisHand].Count - 1]]}", (bool)Main.debugging.SavedValue);
+                object playDrawAnimationCoroutine = PlayDrawCardAnimation(hand[thisHand][hand[thisHand].Count - 1], cardSpots.transform.GetChild(0).GetChild(hand[thisHand].Count - 1), tableInstance.dealerDeck.transform.GetChild(0).GetChild(0).position, Quaternion.Euler(-180, 0, 0));
                 yield return playDrawAnimationCoroutine;
                 if (GetCardsTotal(hand[thisHand]) < 21)
                 {
@@ -862,7 +919,7 @@ namespace PokerTable
             {
                 Log("Pressed Split", (bool)Main.debugging.SavedValue);
                 Log("Player Split Bet Accepted: " + betAmount, true);
-                Main.Payout(-betAmount, 1f);
+                Main.Payout(-betAmount, 1f, tableInstance);
                 betHeldAmount += betAmount;
                 //split 1 hand in 2, then play options for each hand
                 List<int> secondHand = new List<int>();
@@ -874,7 +931,7 @@ namespace PokerTable
                 {
                     if (i != -1)
                     {
-                        cardsString += Table.CardString[i];
+                        cardsString += tableInstance.CardString[i];
                     }
                     else
                     {
@@ -888,7 +945,7 @@ namespace PokerTable
                 {
                     if (i != -1)
                     {
-                        cardsString += Table.CardString[i];
+                        cardsString += tableInstance.CardString[i];
                     }
                     else
                     {
@@ -902,15 +959,12 @@ namespace PokerTable
                 Log($"Playing First Hand", (bool)Main.debugging.SavedValue);
                 object drawSplitCoroutine = MelonCoroutines.Start(DrawSplit(thisHand));
                 yield return drawSplitCoroutine;
-                if (GetCardsTotal(hand[thisHand]) <= 21)
+                if (GetCardsTotal(hand[thisHand]) < 21)
                 {
                     object runOptionsMenuCoroutine = MelonCoroutines.Start(RunOptionsMenu(thisHand));
                     yield return runOptionsMenuCoroutine;
                 }
                 else
-                {
-                    Log("Player Bust, Total: " + GetCardsTotal(hand[thisHand]), (bool)Main.debugging.SavedValue);
-                }
                 yield return new WaitForSeconds(1f);
                 //setup for next hand
                 Log($"Setting Up For Next Hand", (bool)Main.debugging.SavedValue);
@@ -932,7 +986,7 @@ namespace PokerTable
             yield break;
         }
 
-        private static void ClearVisualCardsFromAHand(bool isPlayer)
+        private void ClearVisualCardsFromAHand(bool isPlayer)
         {
             Log($"Clearing {(isPlayer ? "Player's" : "Dealer's")} Cards", (bool)Main.debugging.SavedValue);
             int spot = isPlayer ? 0 : 1;
@@ -945,7 +999,7 @@ namespace PokerTable
             }
         }
 
-        private static IEnumerator DrawSplit(int thisHand, bool recreateOriginal = false)
+        private IEnumerator DrawSplit(int thisHand, bool recreateOriginal = false)
         {
             bool drawFirstSpot = false;
             if (hand[thisHand][0] == -1)
@@ -966,12 +1020,12 @@ namespace PokerTable
             {
                 PlayDrawCardAnimation(hand[thisHand][1], cardSpots.transform.GetChild(0).GetChild(1), cardSpots.transform.GetChild(0).GetChild(1).position, Quaternion.Euler(0, 0, 0), false);
             }
-            object playDrawAnimationCoroutine = PlayDrawCardAnimation(hand[thisHand][drawFirstSpot ? 0 : 1], cardSpots.transform.GetChild(0).GetChild(drawFirstSpot ? 0 : 1), Table.dealerDeck.transform.GetChild(0).GetChild(0).position, Quaternion.Euler(-180, 0, 0));
+            object playDrawAnimationCoroutine = PlayDrawCardAnimation(hand[thisHand][drawFirstSpot ? 0 : 1], cardSpots.transform.GetChild(0).GetChild(drawFirstSpot ? 0 : 1), tableInstance.dealerDeck.transform.GetChild(0).GetChild(0).position, Quaternion.Euler(-180, 0, 0));
             yield return playDrawAnimationCoroutine;
             yield break;
         }
 
-        private static IEnumerator DealersTurn()
+        private IEnumerator DealersTurn()
         {
             Log("DealersTurn Started", (bool)Main.debugging.SavedValue);
             //flip card
@@ -995,16 +1049,16 @@ namespace PokerTable
             yield break;
         }
 
-        private static IEnumerator DealerDraw()
+        private IEnumerator DealerDraw()
         {
             dealerHand.Add(DrawCard());
-            Log($"Dealer Card {dealerHand.Count}: " + Table.CardString[dealerHand[dealerHand.Count - 1]], (bool)Main.debugging.SavedValue);
-            object playDrawAnimationCoroutine = PlayDrawCardAnimation(dealerHand[dealerHand.Count - 1], cardSpots.transform.GetChild(1).GetChild(dealerHand.Count - 1), Table.dealerDeck.transform.GetChild(0).GetChild(0).position, Quaternion.Euler(-180, 0, 0));
+            Log($"Dealer Card {dealerHand.Count}: " + tableInstance.CardString[dealerHand[dealerHand.Count - 1]], (bool)Main.debugging.SavedValue);
+            object playDrawAnimationCoroutine = PlayDrawCardAnimation(dealerHand[dealerHand.Count - 1], cardSpots.transform.GetChild(1).GetChild(dealerHand.Count - 1), tableInstance.dealerDeck.transform.GetChild(0).GetChild(0).position, Quaternion.Euler(-180, 0, 0));
             yield return playDrawAnimationCoroutine;
             yield break;
         }
 
-        private static void SetupOptionsMenu()
+        private void SetupOptionsMenu()
         {
             Log("SetupOptionsMenu Started", (bool)Main.debugging.SavedValue);
             if (storedOptionsMenu != null) { GameObject.Destroy(storedOptionsMenu); }
@@ -1014,38 +1068,51 @@ namespace PokerTable
             storedOptionsMenu.transform.localRotation = Quaternion.identity;
             storedOptionsMenu.transform.localScale = Vector3.one;
 
-            GameObject stayButton = Table.SpawnButton(storedOptionsMenu.transform,
+            GameObject stayButton = tableInstance.SpawnButton(storedOptionsMenu.transform,
                 /*Title*/"Stay",
                 /*position*/ new Vector3(0.25f, 0f, 0.9f),
                 /*rotation*/Quaternion.Euler(0, 0, 0),
                 /*scale*/ new Vector3(0.5f, 0.5f, 0.5f));
 
-            GameObject hitButton = Table.SpawnButton(storedOptionsMenu.transform,
+            GameObject hitButton = tableInstance.SpawnButton(storedOptionsMenu.transform,
                 /*Title*/"Hit",
                 /*position*/ new Vector3(-0.25f, 0f, 0.9f),
                 /*rotation*/Quaternion.Euler(0, 0, 0),
                 /*scale*/ new Vector3(0.5f, 0.5f, 0.5f));
 
-            GameObject SplitButton = Table.SpawnButton(storedOptionsMenu.transform,
+            GameObject splitButton = tableInstance.SpawnButton(storedOptionsMenu.transform,
                 /*Title*/"Split",
                 /*position*/ new Vector3(0f, 0f, 0.95f),
                 /*rotation*/Quaternion.Euler(0, 0, 0),
                 /*scale*/ new Vector3(0.5f, 0.5f, 0.5f));
-            SplitButton.SetActive(false);
+            splitButton.SetActive(false);
+
+            GameObject handText = tableInstance.SpawnText(storedOptionsMenu.transform,
+                /*Title*/"Hand",
+                /*position*/ new Vector3(-0.15f, 0f, 0.6f),
+                /*rotation*/Quaternion.Euler(90f, 180f, 0),
+                /*scale*/ new Vector3(0.5f, 0.5f, 0.5f));
+
+            GameObject dealerHandText = tableInstance.SpawnText(storedOptionsMenu.transform,
+                /*Title*/"Hand",
+                /*position*/ new Vector3(-0.15f, 0f, 0.5f),
+                /*rotation*/Quaternion.Euler(90f, 180f, 0),
+                /*scale*/ new Vector3(0.5f, 0.5f, 0.55f));
+            dealerHandText.SetActive(false);
             Log("SetupOptionsMenu Completed", (bool)Main.debugging.SavedValue);
         }
 
-        private static bool SplitIsPossible(List<int> thisHand)
+        private bool SplitIsPossible(List<int> thisHand)
         {
             int card1 = thisHand[0];
             int card2 = thisHand[1];
             while (card1 >= 13) { card1 -= 13; }
             while (card2 >= 13) { card2 -= 13; }
-            Log("Is Split Possible: " + ((card1 == card2) && (Table.freePlay || (Main.GetPlayerCoinCount() >= (betAmount + betHeldAmount)))), (bool)Main.debugging.SavedValue);
+            Log("Is Split Possible: " + ((card1 == card2) && (tableInstance.freePlay || (Main.GetPlayerCoinCount() >= (betAmount + betHeldAmount)))), (bool)Main.debugging.SavedValue);
             return ((card1 == card2) && (Main.GetPlayerCoinCount() >= (betAmount + betHeldAmount)));
         }
 
-        private static void UpdateBetAmountText()
+        private void UpdateBetAmountText()
         {
             betTextComponent.text = betAmount.ToString() + " of " + Main.GetPlayerCoinCount();
         }

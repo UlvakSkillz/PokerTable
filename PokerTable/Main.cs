@@ -13,7 +13,7 @@ namespace PokerTable
     public static class BuildInfo
     {
         public const string ModName = "PokerTable";
-        public const string ModVersion = "1.0.2";
+        public const string ModVersion = "1.1.0";
         public const string Author = "UlvakSkillz";
     }
 
@@ -34,21 +34,22 @@ namespace PokerTable
 
     public class Main : MelonMod
     {
-        public static Main instance;
         private static MelonLogger.Instance logger;
         private static int playerCoins = -1;
         public static int posesCompleted = -1;
-
-        private string currentScene = "Loader";
-        private Mod PokerTable = new Mod();
-        private ModSetting<bool> enabled;
+        private static bool flatLandFound, voidLandFound;
+        public static Mod PokerTable = new Mod();
         public static ModSetting<int> deckCount;
+        public static ModSetting<bool> enabled;
         public static ModSetting<int> seed;
         public static ModSetting<bool> useSeed;
+        public static ModSetting<bool> showHandCount;
         public static ModSetting<bool> debugging;
-        private GameObject storedTable;
-        public static GameObject loadedTable;
-        private static bool flatLandFound = false, voidLandFound = false;
+        public static List<Table> tableList = new List<Table>();
+        private static string currentScene = "Loader";
+        private static GameObject storedTable;
+        private bool lastUseSeed = false;
+        private int lastdeckCount = 1;
 
         public static void Log(string msg, bool sendMsg = true)
         {
@@ -61,10 +62,9 @@ namespace PokerTable
         }
 
         public static void Error(string msg) { logger.Error(msg); }
-
+        
         public override void OnLateInitializeMelon()
         {
-            instance = this;
             ModUIInit();
             logger = LoggerInstance;
             Log("OnLateInitializeMelon Started", (bool)debugging.SavedValue);
@@ -132,6 +132,7 @@ namespace PokerTable
             PokerTable.SetFolder(BuildInfo.ModName);
             enabled = PokerTable.AddToList("Enabled", true, 0, "Enables THE Table.", new Tags());
             deckCount = PokerTable.AddToList("Deck Count", 1, "Sets How Many Complete Decks should be in the Dealer Deck.", new Tags());
+            showHandCount = PokerTable.AddToList("Show Hand Count", false, 0, "BlackJack: If Enabled, Shows the Hand Counts.", new Tags { });
             seed = PokerTable.AddToList("Seed", -1, "Sets the Seed in the Randomizer if 'Use Seed' is Toggled On.", new Tags { DoNotSave = true });
             useSeed = PokerTable.AddToList("Use Seed", false, 0, "If Enabled, Sets the Table to FreePlay Mode and Uses the Seed.", new Tags { DoNotSave = true });
             debugging = PokerTable.AddToList("Debugging", false, 0, "Enables Debugging Logs.", new Tags());
@@ -141,8 +142,6 @@ namespace PokerTable
             PokerTable.ModSaved += Save;
         }
 
-        private bool lastUseSeed = false;
-        private int lastdeckCount = 1;
         private void Save()
         {
             if (lastdeckCount != (int)deckCount.SavedValue)
@@ -160,12 +159,19 @@ namespace PokerTable
             if (lastUseSeed != (bool)useSeed.SavedValue)
             {
                 lastUseSeed = (bool)useSeed.SavedValue;
-                if (lastUseSeed)
+                foreach (Table table in tableList)
                 {
-                    if (Table.freePlayButton != null) { GameObject.Destroy(Table.freePlayButton); }
-                    Table.freePlay =  true;
+                    if (lastUseSeed)
+                    {
+                        if (table.freePlayButton != null) { GameObject.Destroy(table.freePlayButton); }
+                        table.freePlay = true;
+                    }
+                    if (table.blackJackInstance != null) { MelonCoroutines.Stop(table.blackJackInstance); }
+                    if (table.jacksOrBetterInstance != null) { MelonCoroutines.Stop(table.jacksOrBetterInstance); }
+                    table.ClearActiveObjects();
+                    table.SetupRandom();
+                    table.SetupStart();
                 }
-                Table.SetupRandom();
             }
         }
 
@@ -206,14 +212,20 @@ namespace PokerTable
                     {
                         GameObject.Find("/FlatLand/FlatLandButton/").transform.GetChild(0).GetComponent<InteractionButton>().onPressed.AddListener(new System.Action(() =>
                         {
-                            loadedTable.transform.position = new Vector3(loadedTable.transform.position.x, 0, loadedTable.transform.position.z);
+                            foreach (Table loadedTable in tableList)
+                            {
+                                loadedTable.transform.position = new Vector3(loadedTable.transform.position.x, 0, loadedTable.transform.position.z);
+                            }
                         }));
                     }
                     if (voidLandFound)
                     {
                         GameObject.Find("/VoidLand/VoidLandButton/").transform.GetChild(0).GetComponent<InteractionButton>().onPressed.AddListener(new System.Action(() =>
                         {
-                            loadedTable.transform.position = new Vector3(loadedTable.transform.position.x, 0, loadedTable.transform.position.z);
+                            foreach (Table loadedTable in tableList)
+                            {
+                                loadedTable.transform.position = new Vector3(loadedTable.transform.position.x, 0, loadedTable.transform.position.z);
+                            }
                         }));
                     }
                     break;
@@ -225,20 +237,27 @@ namespace PokerTable
                     return;
             }
             table.SetActive(true);
-            loadedTable = table;
-            table.AddComponent<Table>();
+            tableList.Add(table.AddComponent<Table>());
             Log("LoadTable Completed", (bool)debugging.SavedValue);
         }
 
         public static int GetPlayerCoinCount() { return playerCoins; }
 
-        public static int Payout(int bet, float multiplyer)
+        public static int Payout(int bet, float multiplyer, Table table)
         {
             float betF = bet;
-            if (!Table.freePlay)
+            if (!table.freePlay)
             {
                 playerCoins += (int)(betF * multiplyer);
             }
+            EncryptStringToFile(playerCoins.ToString() + "|" + posesCompleted, @"UserData\" + BuildInfo.ModName + @"\Save.save", "UlvakSkillz");
+            return (int)(betF * multiplyer);
+        }
+
+        public static int Payout(int bet, float multiplyer)
+        {
+            float betF = bet;
+            playerCoins += (int)(betF * multiplyer);
             EncryptStringToFile(playerCoins.ToString() + "|" + posesCompleted, @"UserData\" + BuildInfo.ModName + @"\Save.save", "UlvakSkillz");
             return (int)(betF * multiplyer);
         }

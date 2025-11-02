@@ -16,21 +16,22 @@ namespace PokerTable
     [RegisterTypeInIl2Cpp]
     public class Table : MonoBehaviour
     {
-        public static string[] CardString = {
+        public string[] CardString = {
         "AS", "2S", "3S", "4S", "5S", "6S", "7S", "8S", "9S", "10S", "JS", "QS", "KS",
         "AH", "2H", "3H", "4H", "5H", "6H", "7H", "8H", "9H", "10H", "JH", "QH", "KH",
         "AD", "2D", "3D", "4D", "5D", "6D", "7D", "8D", "9D", "10D", "JD", "QD", "KD",
         "AC", "2C", "3C", "4C", "5C", "6C", "7C", "8C", "9C", "10C", "JC", "QC", "KC" };
 
-        public static Table instance = null;
-        public static float TABLEHEIGHT;
-        public static Random random;
-        public static int seed;
-        public static bool freePlay = false;
-        public static GameObject dealerDeck, storedDeckOfCards;
+        public float TABLEHEIGHT;
+        public Random random = null;
+        private int seed = 0;
+        public bool freePlay = false;
+        public GameObject dealerDeck, storedDeckOfCards;
+        public GameObject freePlayButton;
 
-        public static BlackJack blackJackInstance;
-        public static JacksOrBetter jacksOrBetterInstance;
+        private Table instance = null;
+        public BlackJack blackJackInstance = null;
+        public JacksOrBetter jacksOrBetterInstance = null;
 
         public static void Log(string msg, bool sendMsg = true)
         {
@@ -56,7 +57,6 @@ namespace PokerTable
         void Start()
         {
             Log("Start Started", (bool)Main.debugging.SavedValue);
-            if (instance != null) { GameObject.Destroy(instance.gameObject); }
             instance = this;
             TABLEHEIGHT = this.transform.GetChild(0).GetChild(15).localPosition.y;
             dealerDeck = this.transform.GetChild(0).GetChild(16).gameObject;
@@ -69,12 +69,12 @@ namespace PokerTable
         void OnDestroy()
         {
             Log("OnDestroy Started", (bool)Main.debugging.SavedValue);
-            Component.Destroy(blackJackInstance);
-            Component.Destroy(jacksOrBetterInstance);
+            if (blackJackInstance != null) { MelonCoroutines.Stop(blackJackInstance); }
+            if (jacksOrBetterInstance != null) { MelonCoroutines.Stop(jacksOrBetterInstance); }
             Log("OnDestroy Completed", (bool)Main.debugging.SavedValue);
         }
 
-        public static void SetupRandom()
+        public void SetupRandom()
         {
             Log("SetupRandom Started", (bool)Main.debugging.SavedValue);
             string seedString = "0123456789";
@@ -99,8 +99,7 @@ namespace PokerTable
             Log("SetupRandom Complete", (bool)Main.debugging.SavedValue);
         }
 
-        public static GameObject freePlayButton;
-        private void SetupStart()
+        public void SetupStart()
         {
             Log("SetupStart Started", (bool)Main.debugging.SavedValue);
             if (!(bool)Main.useSeed.SavedValue)
@@ -132,35 +131,25 @@ namespace PokerTable
         {
             Log("Loading Game: " + game, (bool)Main.debugging.SavedValue);
             ClearActiveObjects();
-            switch (game)
-            {
-                case Games.BlackJack:
-                    BlackJack.ShowSplash();
-                    break;
-                case Games.JacksOrBetter:
-                    JacksOrBetter.ShowSplash();
-                    break;
-                default:
-                    return;
-            }
             MelonCoroutines.Start(LoadGameCoroutine(game));
         }
 
         private IEnumerator LoadGameCoroutine(Games game)
         {
-            yield return new WaitForSeconds(0.5f);
             object gameRunningCoroutine = null;
             switch (game)
             {
                 case Games.BlackJack:
                     Log("Game BlackJack Started!", (bool)Main.debugging.SavedValue);
-                    blackJackInstance = new BlackJack();
-                    gameRunningCoroutine = MelonCoroutines.Start(BlackJack.Run()); //load game
+                    blackJackInstance = new BlackJack(instance);
+                    blackJackInstance.ShowSplash();
+                    gameRunningCoroutine = MelonCoroutines.Start(blackJackInstance.Run()); //load game
                     break;
                 case Games.JacksOrBetter:
                     Log("Game JacksOrBetter Started!", (bool)Main.debugging.SavedValue);
-                    jacksOrBetterInstance = new JacksOrBetter();
-                    gameRunningCoroutine = MelonCoroutines.Start(JacksOrBetter.Run()); //load game
+                    jacksOrBetterInstance = new JacksOrBetter(instance);
+                    jacksOrBetterInstance.ShowSplash();
+                    gameRunningCoroutine = MelonCoroutines.Start(jacksOrBetterInstance.Run()); //load game
                     break;
                 default:
                     yield break;
@@ -169,9 +158,10 @@ namespace PokerTable
             ClearActiveObjects();
             Log("Game Completed!", (bool)Main.debugging.SavedValue);
             SetupStart();
+            yield break;
         }
 
-        public static void ClearActiveObjects()
+        public void ClearActiveObjects()
         {
             Log("Clearing Active Objects", (bool)Main.debugging.SavedValue);
             Transform activeObjectsSpot = instance.transform.GetChild(2);
@@ -197,7 +187,7 @@ namespace PokerTable
             return button;
         }
 
-        public static object[] ShuffleDealerDeck()
+        public object[] ShuffleDealerDeck()
         {
             Transform cardsParent = dealerDeck.transform.GetChild(0).GetChild(0).GetChild(0);
             object[] shufflings = new object[cardsParent.GetChildCount()];
@@ -208,10 +198,10 @@ namespace PokerTable
             return shufflings;
         }
 
-        public static IEnumerator SpinCard(GameObject card)
+        public IEnumerator SpinCard(GameObject card)
         {
-            yield return new WaitForSeconds(((float)Table.random.Next(10, 50)) / 100); //adds variation to shuffle start time
-            int fixedUpdatesToCompleteSpin = Table.random.Next(25, 50); //adds variation to spin speed
+            yield return new WaitForSeconds(((float)random.Next(10, 50)) / 100); //adds variation to shuffle start time
+            int fixedUpdatesToCompleteSpin = random.Next(25, 50); //adds variation to spin speed
             int updatesLeft = fixedUpdatesToCompleteSpin;
             float amountToSpin = 360f / ((float)fixedUpdatesToCompleteSpin);
             while (updatesLeft >= 0)
@@ -227,7 +217,7 @@ namespace PokerTable
             yield break;
         }
 
-        public static GameObject SpawnButton(Transform parent, string title, Vector3 position, Quaternion rotation, Vector3 localScale, Action listener = null)
+        public GameObject SpawnButton(Transform parent, string title, Vector3 position, Quaternion rotation, Vector3 localScale, Action listener = null)
         {
             Log("Loading Button: " + title, (bool)Main.debugging.SavedValue);
             GameObject button = (listener != null ? Calls.Create.NewButton(listener) : Calls.Create.NewButton());
@@ -241,7 +231,7 @@ namespace PokerTable
             return button;
         }
 
-        public static GameObject SpawnText(Transform parent, string title, Vector3 position, Quaternion rotation, Vector3 localScale)
+        public GameObject SpawnText(Transform parent, string title, Vector3 position, Quaternion rotation, Vector3 localScale)
         {
             Log("Loading Text: " + title, (bool)Main.debugging.SavedValue);
             GameObject text = Calls.Create.NewText();
@@ -255,7 +245,7 @@ namespace PokerTable
             return text;
         }
 
-        public static void LoadText(GameObject button, string title)
+        public void LoadText(GameObject button, string title)
         {
             Log("Loading Menu Button Text: " + title, (bool)Main.debugging.SavedValue);
             GameObject text = Calls.Create.NewText();
