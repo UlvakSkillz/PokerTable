@@ -197,7 +197,7 @@ namespace PokerTable
                         () => { continuePressed = true; });
                     continueButton.name = "Continue";
                     //wait for continue to be pressed
-                    while (!continuePressed)
+                    while (!continuePressed && gameLoopRunning)
                     {
                         yield return new WaitForFixedUpdate();
                     }
@@ -501,23 +501,23 @@ namespace PokerTable
             Log("DrawStartingHand Started", (bool)Main.debugging.SavedValue);
             hand.Add(DrawCard());
             Log("Player Card 1: " + Table.CardString[hand[0]], (bool)Main.debugging.SavedValue);
-            yield return PlayDrawCardAnimation(hand[0], cardSpots.transform.GetChild(0), Table.dealerDeck.transform.GetChild(0).GetChild(0).position, Quaternion.Euler(0, 180, 0));
+            yield return PlayDrawCardAnimation(hand[0], cardSpots.transform.GetChild(0), Table.dealerDeck.transform.GetChild(0).GetChild(0).position, Quaternion.Euler(-180, 0, 0));
 
             hand.Add(DrawCard());
             Log("Player Card 2: " + Table.CardString[hand[1]], (bool)Main.debugging.SavedValue);
-            yield return PlayDrawCardAnimation(hand[1], cardSpots.transform.GetChild(1), Table.dealerDeck.transform.GetChild(0).GetChild(0).position, Quaternion.Euler(0, 180, 0));
+            yield return PlayDrawCardAnimation(hand[1], cardSpots.transform.GetChild(1), Table.dealerDeck.transform.GetChild(0).GetChild(0).position, Quaternion.Euler(-180, 0, 0));
 
             hand.Add(DrawCard());
             Log("Player Card 3: " + Table.CardString[hand[2]], (bool)Main.debugging.SavedValue);
-            yield return PlayDrawCardAnimation(hand[2], cardSpots.transform.GetChild(2), Table.dealerDeck.transform.GetChild(0).GetChild(0).position, Quaternion.Euler(0, 180, 0));
+            yield return PlayDrawCardAnimation(hand[2], cardSpots.transform.GetChild(2), Table.dealerDeck.transform.GetChild(0).GetChild(0).position, Quaternion.Euler(-180, 0, 0));
 
             hand.Add(DrawCard());
             Log("Player Card 4: " + Table.CardString[hand[3]], (bool)Main.debugging.SavedValue);
-            yield return PlayDrawCardAnimation(hand[3], cardSpots.transform.GetChild(3), Table.dealerDeck.transform.GetChild(0).GetChild(0).position, Quaternion.Euler(0, 180, 0));
+            yield return PlayDrawCardAnimation(hand[3], cardSpots.transform.GetChild(3), Table.dealerDeck.transform.GetChild(0).GetChild(0).position, Quaternion.Euler(-180, 0, 0));
 
             hand.Add(DrawCard());
             Log("Player Card 5: " + Table.CardString[hand[4]], (bool)Main.debugging.SavedValue);
-            yield return PlayDrawCardAnimation(hand[4], cardSpots.transform.GetChild(4), Table.dealerDeck.transform.GetChild(0).GetChild(0).position, Quaternion.Euler(0, 180, 0));
+            yield return PlayDrawCardAnimation(hand[4], cardSpots.transform.GetChild(4), Table.dealerDeck.transform.GetChild(0).GetChild(0).position, Quaternion.Euler(-180, 0, 0));
             Log("DrawStartingHand Completed", (bool)Main.debugging.SavedValue);
             yield break;
         }
@@ -530,7 +530,7 @@ namespace PokerTable
                 if (hand[i] == -1)
                 {
                     hand[i] = DrawCard();
-                    yield return PlayDrawCardAnimation(hand[i], cardSpots.transform.GetChild(i), Table.dealerDeck.transform.GetChild(0).GetChild(0).position, Quaternion.Euler(0, 180, 0));
+                    yield return PlayDrawCardAnimation(hand[i], cardSpots.transform.GetChild(i), Table.dealerDeck.transform.GetChild(0).GetChild(0).position, Quaternion.Euler(-180, 0, 0));
                     yield return new WaitForSeconds(0.25f);
                 }
             }
@@ -564,14 +564,16 @@ namespace PokerTable
             Log("PlayDrawAnimation Started", (bool)Main.debugging.SavedValue);
             Vector3 distancePerTick = (card.transform.localPosition) / ticks;
             float rotationPerTick = 180f / ((float)ticks);
-            float currentRotation = card.transform.localRotation.eulerAngles.y;
+            float currentRotationX = card.transform.localRotation.eulerAngles.x;
+            float currentRotationY = card.transform.localRotation.eulerAngles.y;
+            float currentRotationZ = card.transform.localRotation.eulerAngles.z;
             for (int i = 0; i < 25; i++)
             {
                 card.transform.localPosition -= distancePerTick;
                 if (playRotate)
                 {
-                    currentRotation -= rotationPerTick;
-                    card.transform.localRotation = Quaternion.Euler(card.transform.localRotation.eulerAngles.x, currentRotation, card.transform.localRotation.eulerAngles.z);
+                    currentRotationX -= rotationPerTick;
+                    card.transform.localRotation = Quaternion.Euler(currentRotationX, currentRotationY, currentRotationZ);
                 }
                 yield return new WaitForFixedUpdate();
             }
@@ -692,7 +694,7 @@ namespace PokerTable
         private static void ContinueShufflings(object[] shufflings)
         {
             continueShuffling = true;
-            Transform cardsParent = Table.dealerDeck.transform.GetChild(0).GetChild(0);
+            Transform cardsParent = Table.dealerDeck.transform.GetChild(0).GetChild(0).GetChild(0);
             for (int i = 0; i < shufflings.Length; i++)
             {
                 MelonCoroutines.Start(ShufflingCard(cardsParent.transform.GetChild(i).gameObject, shufflings[i]));
@@ -701,7 +703,7 @@ namespace PokerTable
 
         private static IEnumerator ShufflingCard(GameObject card, object spinCoroutine)
         {
-            Transform cardsParent = Table.dealerDeck.transform.GetChild(0).GetChild(0);
+            Transform cardsParent = Table.dealerDeck.transform.GetChild(0).GetChild(0).GetChild(0);
             yield return spinCoroutine;
             while (continueShuffling)
             {
@@ -801,30 +803,35 @@ namespace PokerTable
                 removeCard1 = !removeCard1;
                 spawnedOptionsMenu.transform.GetChild(0).GetChild(2).GetComponent<TextMeshPro>().text = removeCard1 ? "Remove" : "Keep";
             }));
+            spawnedOptionsMenu.transform.GetChild(0).GetChild(2).GetComponent<TextMeshPro>().text = "Remove";
             //card 2
             spawnedOptionsMenu.transform.GetChild(1).GetChild(0).GetComponent<InteractionButton>().onPressed.AddListener((Action)(() => {
                 Log("Card 2 Pressed", (bool)Main.debugging.SavedValue);
                 removeCard2 = !removeCard2;
                 spawnedOptionsMenu.transform.GetChild(1).GetChild(2).GetComponent<TextMeshPro>().text = removeCard2 ? "Remove" : "Keep";
             }));
+            spawnedOptionsMenu.transform.GetChild(1).GetChild(2).GetComponent<TextMeshPro>().text = "Remove";
             //card 3
             spawnedOptionsMenu.transform.GetChild(2).GetChild(0).GetComponent<InteractionButton>().onPressed.AddListener((Action)(() => {
                 Log("Card 3 Pressed", (bool)Main.debugging.SavedValue);
                 removeCard3 = !removeCard3;
                 spawnedOptionsMenu.transform.GetChild(2).GetChild(2).GetComponent<TextMeshPro>().text = removeCard3 ? "Remove" : "Keep";
             }));
+            spawnedOptionsMenu.transform.GetChild(2).GetChild(2).GetComponent<TextMeshPro>().text = "Remove";
             //card 4
             spawnedOptionsMenu.transform.GetChild(3).GetChild(0).GetComponent<InteractionButton>().onPressed.AddListener((Action)(() => {
                 Log("Card 4 Pressed", (bool)Main.debugging.SavedValue);
                 removeCard4 = !removeCard4;
                 spawnedOptionsMenu.transform.GetChild(3).GetChild(2).GetComponent<TextMeshPro>().text = removeCard4 ? "Remove" : "Keep";
             }));
+            spawnedOptionsMenu.transform.GetChild(3).GetChild(2).GetComponent<TextMeshPro>().text = "Remove";
             //card 5
             spawnedOptionsMenu.transform.GetChild(4).GetChild(0).GetComponent<InteractionButton>().onPressed.AddListener((Action)(() => {
                 Log("Card 5 Pressed", (bool)Main.debugging.SavedValue);
                 removeCard5 = !removeCard5;
                 spawnedOptionsMenu.transform.GetChild(4).GetChild(2).GetComponent<TextMeshPro>().text = removeCard5 ? "Remove" : "Keep";
             }));
+            spawnedOptionsMenu.transform.GetChild(4).GetChild(2).GetComponent<TextMeshPro>().text = "Remove";
             //continue
             spawnedOptionsMenu.transform.GetChild(5).GetChild(0).GetComponent<InteractionButton>().onPressed.AddListener((Action)(() => {
                 Log("Continue Pressed", (bool)Main.debugging.SavedValue);
@@ -916,7 +923,7 @@ namespace PokerTable
             button.transform.GetChild(2).localPosition = new Vector3(0, 0, -0.2f);
             textMeshPro = button.transform.GetChild(2).GetComponent<TextMeshPro>();
             textMeshPro.fontSize = 0.75f;
-            textMeshPro.text = (removeCard1 ? "Remove" : "Keep");
+            textMeshPro.text = "Remove";
 
             button = Table.SpawnButton(storedOptionsMenu.transform,
                 /*Title*/"Card2",
@@ -926,7 +933,7 @@ namespace PokerTable
             button.transform.GetChild(2).localPosition = new Vector3(0, 0, -0.2f);
             textMeshPro = button.transform.GetChild(2).GetComponent<TextMeshPro>();
             textMeshPro.fontSize = 0.75f;
-            textMeshPro.text = (removeCard2 ? "Remove" : "Keep");
+            textMeshPro.text = "Remove";
 
             button = Table.SpawnButton(storedOptionsMenu.transform,
                 /*Title*/"Card3",
@@ -936,7 +943,7 @@ namespace PokerTable
             button.transform.GetChild(2).localPosition = new Vector3(0, 0, -0.2f);
             textMeshPro = button.transform.GetChild(2).GetComponent<TextMeshPro>();
             textMeshPro.fontSize = 0.75f;
-            textMeshPro.text = (removeCard3 ? "Remove" : "Keep");
+            textMeshPro.text = "Remove";
 
             button = Table.SpawnButton(storedOptionsMenu.transform,
                 /*Title*/"Card4",
@@ -946,7 +953,7 @@ namespace PokerTable
             button.transform.GetChild(2).localPosition = new Vector3(0, 0, -0.2f);
             textMeshPro = button.transform.GetChild(2).GetComponent<TextMeshPro>();
             textMeshPro.fontSize = 0.75f;
-            textMeshPro.text = (removeCard4 ? "Remove" : "Keep");
+            textMeshPro.text = "Remove";
 
             button = Table.SpawnButton(storedOptionsMenu.transform,
                 /*Title*/"Card5",
@@ -956,7 +963,7 @@ namespace PokerTable
             button.transform.GetChild(2).localPosition = new Vector3(0, 0, -0.2f);
             textMeshPro = button.transform.GetChild(2).GetComponent<TextMeshPro>();
             textMeshPro.fontSize = 0.75f;
-            textMeshPro.text = (removeCard5 ? "Remove" : "Keep");
+            textMeshPro.text = "Remove";
 
             Table.SpawnButton(storedOptionsMenu.transform,
                 /*Title*/"Continue",

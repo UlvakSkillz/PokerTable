@@ -148,6 +148,7 @@ namespace PokerTable
                     int dealerHandTotal = GetDealerHandTotal();
                     for (int i = playerHandTotals.Count - 1; i >= 0; i--)
                     {
+                        if (!gameLoopRunning) { break; }
                         //clear active cards
                         ClearVisualCardsFromAHand(true);
                         ClearVisualCardsFromAHand(false);
@@ -228,7 +229,7 @@ namespace PokerTable
                         () => { continuePressed = true; });
                     continueButton.name = "Continue";
                     //wait for continue to be pressed
-                    while (!continuePressed)
+                    while (!continuePressed && gameLoopRunning)
                     {
                         yield return new WaitForFixedUpdate();
                     }
@@ -267,7 +268,7 @@ namespace PokerTable
         private static IEnumerator PlayCardReactCoroutine(GameObject card, bool win, bool isPlayer)
         {
             Vector3 startingPostion = card.transform.localPosition;
-            Vector3 movePerTick = ((isPlayer ? Vector3.right : Vector3.left) / 50f) * (win ? 0.5f : -0.25f);
+            Vector3 movePerTick = ((isPlayer ? Vector3.back : Vector3.forward) / 50f) * (win ? 0.5f : -0.25f);
             for (int i = 0; i < 25; i++)
             {
                 card.transform.localPosition += movePerTick;
@@ -385,12 +386,14 @@ namespace PokerTable
             newCard.transform.position = dealerCard.transform.position;
             newCard.transform.rotation = dealerCard.transform.rotation;
             newCard.transform.localScale = dealerCard.transform.localScale;
-            float currentRotation = newCard.transform.localRotation.eulerAngles.y;
+            float currentRotationX = newCard.transform.localRotation.eulerAngles.x;
+            float currentRotationY = newCard.transform.localRotation.eulerAngles.y;
+            float currentRotationZ = newCard.transform.localRotation.eulerAngles.z;
             GameObject.Destroy(dealerCard.gameObject);
             for (int i = 0; i < 25; i++)
             {
-                currentRotation -= rotationPerTick;
-                newCard.transform.localRotation = Quaternion.Euler(newCard.transform.localRotation.x, currentRotation, newCard.transform.localRotation.z);
+                currentRotationX -= rotationPerTick;
+                newCard.transform.localRotation = Quaternion.Euler(currentRotationX, currentRotationY, currentRotationZ);
                 yield return new WaitForFixedUpdate();
             }
             Log("Completed Rotation", (bool)Main.debugging.SavedValue);
@@ -498,23 +501,23 @@ namespace PokerTable
             int thisHand = hand.Count;
             hand.Add(new List<int>());
             hand[hand.Count - 1].Add(DrawCard());
-            Log("Player Card 1: " + Table.CardString[hand[0][0]], (bool)Main.debugging.SavedValue);
-            object playDrawAnimationCoroutine = PlayDrawCardAnimation(hand[hand.Count - 1][0], cardSpots.transform.GetChild(0).GetChild(0), Table.dealerDeck.transform.GetChild(0).GetChild(0).position, Quaternion.Euler(0, 180, 0));
+            Log("Player Card 1: " + Table.CardString[hand[hand.Count - 1][0]], (bool)Main.debugging.SavedValue);
+            object playDrawAnimationCoroutine = PlayDrawCardAnimation(hand[hand.Count - 1][0], cardSpots.transform.GetChild(0).GetChild(0), Table.dealerDeck.transform.GetChild(0).GetChild(0).position, Quaternion.Euler(-180, 0, 0));
             yield return playDrawAnimationCoroutine;
 
             dealerHand.Add(DrawCard());
             Log("Dealer Card 1: " + Table.CardString[dealerHand[0]], (bool)Main.debugging.SavedValue);
-            object playDrawAnimationCoroutine2 = PlayDrawCardAnimation(dealerHand[0], cardSpots.transform.GetChild(1).GetChild(0), Table.dealerDeck.transform.GetChild(0).GetChild(0).position, Quaternion.Euler(0, 180, 0));
+            object playDrawAnimationCoroutine2 = PlayDrawCardAnimation(dealerHand[0], cardSpots.transform.GetChild(1).GetChild(0), Table.dealerDeck.transform.GetChild(0).GetChild(0).position, Quaternion.Euler(-180, 0, 0));
             yield return playDrawAnimationCoroutine2;
 
-            hand[0].Add(DrawCard());
-            Log("Player Card 2: " + Table.CardString[hand[0][1]], (bool)Main.debugging.SavedValue);
-            object playDrawAnimationCoroutine3 = PlayDrawCardAnimation(hand[0][1], cardSpots.transform.GetChild(0).GetChild(1), Table.dealerDeck.transform.GetChild(0).GetChild(0).position, Quaternion.Euler(0, 180, 0));
+            hand[hand.Count - 1].Add(DrawCard());
+            Log("Player Card 2: " + Table.CardString[hand[hand.Count - 1][1]], (bool)Main.debugging.SavedValue);
+            object playDrawAnimationCoroutine3 = PlayDrawCardAnimation(hand[hand.Count - 1][1], cardSpots.transform.GetChild(0).GetChild(1), Table.dealerDeck.transform.GetChild(0).GetChild(0).position, Quaternion.Euler(-180, 0, 0));
             yield return playDrawAnimationCoroutine3;
             
             dealerHand.Add(DrawCard());
             Log("Dealer Card 2: -_-", (bool)Main.debugging.SavedValue);
-            object playDrawAnimationCoroutine4 = PlayDrawCardAnimation(52, cardSpots.transform.GetChild(1).GetChild(1), Table.dealerDeck.transform.GetChild(0).GetChild(0).position, Quaternion.Euler(0, 180, 0), false);
+            object playDrawAnimationCoroutine4 = PlayDrawCardAnimation(52, cardSpots.transform.GetChild(1).GetChild(1), Table.dealerDeck.transform.GetChild(0).GetChild(0).position, Quaternion.Euler(-180, 0, 0), false);
             yield return playDrawAnimationCoroutine4;
             //starting hands have been dealt
             if (GetCardsTotal(hand[thisHand]) == 21)
@@ -557,14 +560,16 @@ namespace PokerTable
             Log("PlayDrawAnimation Started", (bool)Main.debugging.SavedValue);
             Vector3 distancePerTick = (card.transform.localPosition) / ticks;
             float rotationPerTick = 180f / ((float)ticks);
-            float currentRotation = card.transform.localRotation.eulerAngles.y;
+            float currentRotationX = card.transform.localRotation.eulerAngles.x;
+            float currentRotationY = card.transform.localRotation.eulerAngles.y;
+            float currentRotationZ = card.transform.localRotation.eulerAngles.z;
             for (int i = 0; i < 25; i++)
             {
                 card.transform.localPosition -= distancePerTick;
                 if (playRotate)
                 {
-                    currentRotation -= rotationPerTick;
-                    card.transform.localRotation = Quaternion.Euler(card.transform.localRotation.eulerAngles.x, currentRotation, card.transform.localRotation.eulerAngles.z);
+                    currentRotationX -= rotationPerTick;
+                    card.transform.localRotation = Quaternion.Euler(currentRotationX, currentRotationY, currentRotationZ);
                 }
                 yield return new WaitForFixedUpdate();
             }
@@ -691,7 +696,7 @@ namespace PokerTable
         private static void ContinueShufflings(object[] shufflings)
         {
             continueShuffling = true;
-            Transform cardsParent = Table.dealerDeck.transform.GetChild(0).GetChild(0);
+            Transform cardsParent = Table.dealerDeck.transform.GetChild(0).GetChild(0).GetChild(0);
             for (int i = 0; i < shufflings.Length; i++)
             {
                 MelonCoroutines.Start(ShufflingCard(cardsParent.transform.GetChild(i).gameObject, shufflings[i]));
@@ -700,7 +705,7 @@ namespace PokerTable
 
         private static IEnumerator ShufflingCard(GameObject card, object spinCoroutine)
         {
-            Transform cardsParent = Table.dealerDeck.transform.GetChild(0).GetChild(0);
+            Transform cardsParent = Table.dealerDeck.transform.GetChild(0).GetChild(0).GetChild(0);
             yield return spinCoroutine;
             while (continueShuffling)
             {
@@ -835,7 +840,7 @@ namespace PokerTable
                 hand[thisHand].Add(DrawCard());
                 //add drawing card visual
                 Log($"Player Card {hand[thisHand].Count}: {Table.CardString[hand[thisHand][hand[thisHand].Count - 1]]}", (bool)Main.debugging.SavedValue);
-                object playDrawAnimationCoroutine = PlayDrawCardAnimation(hand[thisHand][hand[thisHand].Count - 1], cardSpots.transform.GetChild(0).GetChild(hand[thisHand].Count - 1), Table.dealerDeck.transform.GetChild(0).GetChild(0).position, Quaternion.Euler(0, 180, 0));
+                object playDrawAnimationCoroutine = PlayDrawCardAnimation(hand[thisHand][hand[thisHand].Count - 1], cardSpots.transform.GetChild(0).GetChild(hand[thisHand].Count - 1), Table.dealerDeck.transform.GetChild(0).GetChild(0).position, Quaternion.Euler(-180, 0, 0));
                 yield return playDrawAnimationCoroutine;
                 if (GetCardsTotal(hand[thisHand]) < 21)
                 {
@@ -961,7 +966,7 @@ namespace PokerTable
             {
                 PlayDrawCardAnimation(hand[thisHand][1], cardSpots.transform.GetChild(0).GetChild(1), cardSpots.transform.GetChild(0).GetChild(1).position, Quaternion.Euler(0, 0, 0), false);
             }
-            object playDrawAnimationCoroutine = PlayDrawCardAnimation(hand[thisHand][drawFirstSpot ? 0 : 1], cardSpots.transform.GetChild(0).GetChild(drawFirstSpot ? 0 : 1), Table.dealerDeck.transform.GetChild(0).GetChild(0).position, Quaternion.Euler(0, 180, 0));
+            object playDrawAnimationCoroutine = PlayDrawCardAnimation(hand[thisHand][drawFirstSpot ? 0 : 1], cardSpots.transform.GetChild(0).GetChild(drawFirstSpot ? 0 : 1), Table.dealerDeck.transform.GetChild(0).GetChild(0).position, Quaternion.Euler(-180, 0, 0));
             yield return playDrawAnimationCoroutine;
             yield break;
         }
@@ -994,7 +999,7 @@ namespace PokerTable
         {
             dealerHand.Add(DrawCard());
             Log($"Dealer Card {dealerHand.Count}: " + Table.CardString[dealerHand[dealerHand.Count - 1]], (bool)Main.debugging.SavedValue);
-            object playDrawAnimationCoroutine = PlayDrawCardAnimation(dealerHand[dealerHand.Count - 1], cardSpots.transform.GetChild(1).GetChild(dealerHand.Count - 1), Table.dealerDeck.transform.GetChild(0).GetChild(0).position, Quaternion.Euler(0, 180, 0));
+            object playDrawAnimationCoroutine = PlayDrawCardAnimation(dealerHand[dealerHand.Count - 1], cardSpots.transform.GetChild(1).GetChild(dealerHand.Count - 1), Table.dealerDeck.transform.GetChild(0).GetChild(0).position, Quaternion.Euler(-180, 0, 0));
             yield return playDrawAnimationCoroutine;
             yield break;
         }

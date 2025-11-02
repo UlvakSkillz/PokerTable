@@ -9,6 +9,7 @@
       "PokerTable/1.0.0": {
         "dependencies": {
           "0Harmony": "2.10.2.0",
+          "FlatLand": "1.0.0.0",
           "Il2CppBucketheadEntertainment.Plugins": "0.0.0.0",
           "Il2CppInterop.Runtime": "1.5.1.0",
           "Il2Cppmscorlib": "4.0.0.0",
@@ -20,7 +21,8 @@
           "Unity.TextMeshPro": "0.0.0.0",
           "UnityEngine.CoreModule": "0.0.0.0",
           "UnityEngine": "0.0.0.0",
-          "UnityEngine.PhysicsModule": "0.0.0.0"
+          "UnityEngine.PhysicsModule": "0.0.0.0",
+          "VoidLand": "1.0.0.0"
         },
         "runtime": {
           "PokerTable.dll": {}
@@ -31,6 +33,14 @@
           "0Harmony.dll": {
             "assemblyVersion": "2.10.2.0",
             "fileVersion": "2.10.2.0"
+          }
+        }
+      },
+      "FlatLand/1.0.0.0": {
+        "runtime": {
+          "FlatLand.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
           }
         }
       },
@@ -127,6 +137,14 @@
           "UnityEngine.PhysicsModule.dll": {
             "assemblyVersion": "0.0.0.0",
             "fileVersion": "0.0.0.0"
+          }
+        }
+      },
+      "VoidLand/1.0.0.0": {
+        "runtime": {
+          "VoidLand.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
           }
         }
       },
@@ -855,6 +873,11 @@
       "serviceable": false,
       "sha512": ""
     },
+    "FlatLand/1.0.0.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
     "Il2CppBucketheadEntertainment.Plugins/0.0.0.0": {
       "type": "reference",
       "serviceable": false,
@@ -911,6 +934,11 @@
       "sha512": ""
     },
     "UnityEngine.PhysicsModule/0.0.0.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "VoidLand/1.0.0.0": {
       "type": "reference",
       "serviceable": false,
       "sha512": ""

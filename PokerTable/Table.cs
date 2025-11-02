@@ -77,32 +77,25 @@ namespace PokerTable
         public static void SetupRandom()
         {
             Log("SetupRandom Started", (bool)Main.debugging.SavedValue);
-            Log("0", true);
             string seedString = "0123456789";
             if (!(bool)Main.useSeed.SavedValue)
             {
-                Log("1", true);
                 Random randomSeed = new Random();
                 int randomInt = randomSeed.Next(1, 10);
                 string seedCrafted = seedString[randomInt].ToString();
-                Log("2", true);
                 for (int i = 1; i <= 8; i++)
                 {
                     seedCrafted += seedString[randomSeed.Next(0, 10)];
                 }
-                Log("3", true);
                 seed = int.Parse(seedCrafted);
-                Log("4", true);
             }
             else
             {
-                Log("5", true); seed = Math.Min((int)Main.seed.SavedValue, 0);
+                seed = Math.Min((int)Main.seed.SavedValue, 0);
             }
-            Log("6", true);
             Main.seed.Value = seed;
             Main.seed.SavedValue = seed;
             random = new Random(seed);
-            Log("7", true);
             Log("SetupRandom Complete", (bool)Main.debugging.SavedValue);
         }
 
@@ -206,7 +199,7 @@ namespace PokerTable
 
         public static object[] ShuffleDealerDeck()
         {
-            Transform cardsParent = dealerDeck.transform.GetChild(0).GetChild(0);
+            Transform cardsParent = dealerDeck.transform.GetChild(0).GetChild(0).GetChild(0);
             object[] shufflings = new object[cardsParent.GetChildCount()];
             for (int i = 0; i < cardsParent.GetChildCount(); i++)
             {

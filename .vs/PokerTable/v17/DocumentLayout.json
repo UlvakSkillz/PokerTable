@@ -3,20 +3,20 @@
   "WorkspaceRootPath": "C:\\Users\\austi\\source\\repos\\PokerTable\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{AFD14DBD-5AFA-42EB-A7C7-07DFB44A29DC}|PokerTable\\PokerTable.csproj|c:\\users\\austi\\source\\repos\\pokertable\\pokertable\\main.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{AFD14DBD-5AFA-42EB-A7C7-07DFB44A29DC}|PokerTable\\PokerTable.csproj|solutionrelative:pokertable\\main.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{AFD14DBD-5AFA-42EB-A7C7-07DFB44A29DC}|PokerTable\\PokerTable.csproj|c:\\users\\austi\\source\\repos\\pokertable\\pokertable\\table.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{AFD14DBD-5AFA-42EB-A7C7-07DFB44A29DC}|PokerTable\\PokerTable.csproj|solutionrelative:pokertable\\table.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{AFD14DBD-5AFA-42EB-A7C7-07DFB44A29DC}|PokerTable\\PokerTable.csproj|c:\\users\\austi\\source\\repos\\pokertable\\pokertable\\blackjack.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{AFD14DBD-5AFA-42EB-A7C7-07DFB44A29DC}|PokerTable\\PokerTable.csproj|solutionrelative:pokertable\\blackjack.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
+      "AbsoluteMoniker": "D:0:0:{AFD14DBD-5AFA-42EB-A7C7-07DFB44A29DC}|PokerTable\\PokerTable.csproj|c:\\users\\austi\\source\\repos\\pokertable\\pokertable\\main.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{AFD14DBD-5AFA-42EB-A7C7-07DFB44A29DC}|PokerTable\\PokerTable.csproj|solutionrelative:pokertable\\main.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{AFD14DBD-5AFA-42EB-A7C7-07DFB44A29DC}|PokerTable\\PokerTable.csproj|c:\\users\\austi\\source\\repos\\pokertable\\pokertable\\jacksorbetter.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{AFD14DBD-5AFA-42EB-A7C7-07DFB44A29DC}|PokerTable\\PokerTable.csproj|solutionrelative:pokertable\\jacksorbetter.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{AFD14DBD-5AFA-42EB-A7C7-07DFB44A29DC}|PokerTable\\PokerTable.csproj|c:\\users\\austi\\source\\repos\\pokertable\\pokertable\\table.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{AFD14DBD-5AFA-42EB-A7C7-07DFB44A29DC}|PokerTable\\PokerTable.csproj|solutionrelative:pokertable\\table.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -26,56 +26,55 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 0,
+          "SelectedChildIndex": 2,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 1,
               "Title": "Main.cs",
               "DocumentMoniker": "C:\\Users\\austi\\source\\repos\\PokerTable\\PokerTable\\Main.cs",
               "RelativeDocumentMoniker": "PokerTable\\Main.cs",
               "ToolTip": "C:\\Users\\austi\\source\\repos\\PokerTable\\PokerTable\\Main.cs",
               "RelativeToolTip": "PokerTable\\Main.cs",
-              "ViewState": "AgIAAGoAAAAAAAAAAAAiwIkAAAANAAAAAAAAAA==",
+              "ViewState": "AgIAAIcAAAAAAAAAAAAkwAYAAAASAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-10-21T08:43:25.181Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 3,
               "Title": "Table.cs",
               "DocumentMoniker": "C:\\Users\\austi\\source\\repos\\PokerTable\\PokerTable\\Table.cs",
               "RelativeDocumentMoniker": "PokerTable\\Table.cs",
               "ToolTip": "C:\\Users\\austi\\source\\repos\\PokerTable\\PokerTable\\Table.cs",
               "RelativeToolTip": "PokerTable\\Table.cs",
-              "ViewState": "AgIAAD0AAAAAAAAAAAAiwFgAAAAsAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAF0AAAAQAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-21T08:48:56.537Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-10-21T08:48:56.537Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 0,
               "Title": "BlackJack.cs",
               "DocumentMoniker": "C:\\Users\\austi\\source\\repos\\PokerTable\\PokerTable\\BlackJack.cs",
               "RelativeDocumentMoniker": "PokerTable\\BlackJack.cs",
               "ToolTip": "C:\\Users\\austi\\source\\repos\\PokerTable\\PokerTable\\BlackJack.cs",
               "RelativeToolTip": "PokerTable\\BlackJack.cs",
-              "ViewState": "AgIAAGQCAAAAAAAAAAASwIwCAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAAWAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-10-30T02:17:11.588Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 2,
               "Title": "JacksOrBetter.cs",
               "DocumentMoniker": "C:\\Users\\austi\\source\\repos\\PokerTable\\PokerTable\\JacksOrBetter.cs",
               "RelativeDocumentMoniker": "PokerTable\\JacksOrBetter.cs",
               "ToolTip": "C:\\Users\\austi\\source\\repos\\PokerTable\\PokerTable\\JacksOrBetter.cs",
               "RelativeToolTip": "PokerTable\\JacksOrBetter.cs",
-              "ViewState": "AgIAAIYCAAAAAAAAAAASwKACAAANAAAAAAAAAA==",
+              "ViewState": "AgIAABMAAAAAAAAAAAAgwCIAAAAeAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-10-30T00:21:46.444Z",
               "EditorCaption": ""

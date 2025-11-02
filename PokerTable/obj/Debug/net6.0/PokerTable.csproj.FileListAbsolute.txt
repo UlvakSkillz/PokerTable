@@ -115,3 +115,6 @@ C:\Users\austi\source\repos\PokerTable\PokerTable\obj\Debug\net6.0\PokerTable.dl
 C:\Users\austi\source\repos\PokerTable\PokerTable\obj\Debug\net6.0\refint\PokerTable.dll
 C:\Users\austi\source\repos\PokerTable\PokerTable\obj\Debug\net6.0\PokerTable.pdb
 C:\Users\austi\source\repos\PokerTable\PokerTable\obj\Debug\net6.0\ref\PokerTable.dll
+C:\Users\austi\source\repos\PokerTable\PokerTable\obj\Debug\net6.0\PokerTable.sourcelink.json
+C:\Users\austi\source\repos\PokerTable\PokerTable\bin\Debug\net6.0\FlatLand.dll
+C:\Users\austi\source\repos\PokerTable\PokerTable\bin\Debug\net6.0\VoidLand.dll
