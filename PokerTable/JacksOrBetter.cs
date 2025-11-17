@@ -4,7 +4,7 @@ using MelonLoader;
 using System.Collections;
 using UnityEngine;
 
-namespace PokerTable
+namespace GamblingMod
 {
     public enum PayoutResult : int
     {

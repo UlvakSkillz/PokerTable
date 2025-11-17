@@ -3,9 +3,9 @@ using Il2CppTMPro;
 using MelonLoader;
 using System.Collections;
 using UnityEngine;
-using static RumbleModdingAPI.Calls.GameObjects.Gym.LOGIC.Slabbuddymenuvariant.MenuForm.Base.ControlsSlab.GameSlabCanvas.Text.GameSlabSettings.HandSettings;
 
-namespace PokerTable
+
+namespace GamblingMod
 {
     public class BlackJack : MonoBehaviour
     {

@@ -14,9 +14,9 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\austi\\source\\repos\\PokerTable\\PokerTable\\PokerTable.csproj",
-      "projectName": "PokerTable",
-      "projectPath": "C:\\Users\\austi\\source\\repos\\PokerTable\\PokerTable\\PokerTable.csproj",
+      "projectUniqueName": "C:\\Users\\austi\\source\\repos\\PokerTable\\PokerTable\\GamblingMod.csproj",
+      "projectName": "GamblingMod",
+      "projectPath": "C:\\Users\\austi\\source\\repos\\PokerTable\\PokerTable\\GamblingMod.csproj",
       "packagesPath": "C:\\Users\\austi\\.nuget\\packages\\",
       "outputPath": "C:\\Users\\austi\\source\\repos\\PokerTable\\PokerTable\\obj\\",
       "projectStyle": "PackageReference",

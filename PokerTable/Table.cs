@@ -5,7 +5,7 @@ using System.Collections;
 using UnityEngine;
 using Random = System.Random;
 
-namespace PokerTable
+namespace GamblingMod
 {
     public enum Games : int
     {
@@ -91,10 +91,10 @@ namespace PokerTable
             }
             else
             {
-                seed = Math.Min((int)Main.seed.SavedValue, 0);
+                seed = Math.Min((int)Main.tableSeed.SavedValue, 0);
             }
-            Main.seed.Value = seed;
-            Main.seed.SavedValue = seed;
+            Main.tableSeed.Value = seed;
+            Main.tableSeed.SavedValue = seed;
             random = new Random(seed);
             Log("SetupRandom Complete", (bool)Main.debugging.SavedValue);
         }
@@ -108,11 +108,15 @@ namespace PokerTable
                     /*position*/ new Vector3(0f, TABLEHEIGHT - 0.045f, 0.6f),
                     /*rotation*/Quaternion.Euler(0, 0, 0),
                     /*scale*/ new Vector3(0.5f, 0.5f, 0.5f),
-                    () => {
+                    () =>
+                    {
                         freePlay = !freePlay;
                         this.gameObject.transform.GetChild(2).FindChild("FreePlay Button/FreePlayText").GetComponent<TextMeshPro>().color = freePlay ? Color.green : Color.red;
                     });
-                freePlayButton.transform.GetChild(2).GetComponent<TextMeshPro>().color = freePlay ? Color.green : Color.red;
+                if (freePlayButton != null)
+                {
+                    freePlayButton.transform.GetChild(2).GetComponent<TextMeshPro>().color = freePlay ? Color.green : Color.red;
+                }
             }
             LoadMenuButton("BlackJack",
                 /*position*/ new Vector3(0.55f, TABLEHEIGHT - 0.05f, 0.6f),
